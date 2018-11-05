@@ -1,0 +1,9 @@
+##############################################################################################
+#
+# JunosAudit Configuration Directory
+# This is the directory that holds the Junos device configuration files. EACH configuration
+# file *MUST* contain the output of the following commands:
+#  - show version | no-more
+#  - show configuration | display set | no-more
+#
+##############################################################################################
