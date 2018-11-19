@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Purpose: Run predefined audit checks on Junos Configuration files that are in 'set' format.
-# Version: 0.9
+# Version: 0.10
 #####################################################################################################################
 
 ############################################
@@ -24,10 +24,10 @@ sys.stdout.write("+ Reading configuration file......................")
 
 try:
 	with open('junosAudit.ini') as f:
-		sample_config = f.read()
+		junosAudit_config = f.read()
 
 	config = ConfigParser.RawConfigParser(allow_no_value=True)
-	config.readfp(io.BytesIO(sample_config))
+	config.readfp(io.BytesIO(junosAudit_config))
 
         print " SUCCESS"
 
@@ -71,12 +71,21 @@ else:
 ##################################################################################
 ## Functions
 ##################################################################################
+def buildIndex(filenames,config):
+	htmlDir = config.get('global', 'htmlDir')
+	indexFile = "%s/index.html" % (htmlDir)
 
-##################################################################################
-# preStaging
-# Move files from the config directory to the working directory and add the 
-# corrective actions section at the end of the file.
-##################################################################################
+	# Create file
+	index = open(indexFile, "w")
+	index.write("<html><head><title>Index</title></head><body><pre>\n")
+
+	for i in filenames:
+		index.write(i)
+		index.write("\n")
+
+	index.write("\n</pre></body></html>")
+	index.close()
+
 def preStaging(filenames,config):
 	sys.stdout.write("+ Copying configurations to working directory.....")
 	configDir = config.get('global', 'configDir')
@@ -95,16 +104,15 @@ def preStaging(filenames,config):
 
 	print " SUCCESS"
 
-##################################################################################
-# finalize
-# Move files from the working directory to the output directory and add the 
-# necessary HTML code.
-##################################################################################
 def finalize(filenames,config):
 	sys.stdout.write("\n+ Finalizing Device Reports.......................")
 	workDir = config.get('global', 'workDir')
 	htmlDir = config.get('global', 'htmlDir')
-	customerName = config.get('site', 'customer')
+	if config.has_option('site', 'customer'):
+		customerName = config.get('site', 'customer')
+	else:
+		print "\n\t!WARNING: site/customer name NOT set in junosAudit.ini. Setting customer to NOT-SET\n"
+		customerName = "NOT-SET"
 
 	# Build HTML output files from working files
 	for filename in filenames:
@@ -211,7 +219,9 @@ for file in filenames:
 	checkSNMP(file,config)
 	checkTraceoptions(file,config)
 	checkAccounts(file,config)
+	checkNTP(file,config)
 
 finalize(filenames,config)
+#buildIndex(filenames,config)
 
 ## end of file ##
