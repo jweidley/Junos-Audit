@@ -34,17 +34,17 @@ Junos Audit is a Python script that will allow you to audit your Junos devices f
 # Customizing the checks
 The check functions are located in the checkModles.py file. The function name gives you a clue as to its purpose. There are 2 general
 purpose functions for adding simple custom checks:
-  - checkCLIs: Has two lists that contain EXACT CLI commands. It is a simple should be there or shouldn't be there kind of check. This
-    function does *NOT* use regular expressions and thats why the CLI must match exactly.
+  - checkCLIs: Reads in the CLI commands from two files located in the Templates directory. Both files MUST contain the EXACT CLI commands. It is a simple 
+    should be there or shouldn't be there kind of check. This function does *NOT* use regular expressions and thats why the CLI must match exactly.
  
-    + badCliList is for commands that should NOT be in the configuration file (i.e. "set system services ssh root-login allow"). Entries 
+    + unauthorized-cli-commands.txt: is for commands that should NOT be in the configuration file (i.e. "set system services ssh root-login allow"). Entries 
       in the badCliList will be flagged as failed (colored red) and added to the Corrective Actions section of the HTML file. 
 
-    + requiredCliList is for commands that SHOULD be in the configuration file (i.e. "set system services ssh root-login deny"). Entries 
+    + required-cli-commands.txt: is for commands that SHOULD be in the configuration file (i.e. "set system services ssh root-login deny"). Entries 
       in the requiredCliList will be flagged (colored green) as passed.
 
   - checkPartial: This function uses regular expressions so you can match keywords or partial CLI commands. Adding new checks is as 
     simple as adding a new 'elif' condition inside the for loop.
 
-For more complex checking you can add a new function in the checkModules.py file and then call it from junosAudi.py.
+For more complex checking you can add a new function in the checkModules.py file and then call it from junosAudit.py.
 

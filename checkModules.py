@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Purpose: This file contains all of the check functions that are called from the junosAudit.py script
-# Version: 0.8
+# Version: 0.9
 #####################################################################################################################################
 
 ############################################
@@ -97,71 +97,45 @@ def checkJunosVersion(file,config):
 # intelligent processing needs a separate function that uses the Regex module.
 ######################################################################################################################################
 def checkCLIs(file,config):
-	sys.stdout.write(".")
 	fixCommands = [] 
-	badCliList = [
-			"set routing-options source-routing ip",
-			"set routing-options source-routing ipv6",
-			"set system license autoupdate url https://ae1.juniper.net/junos/key_retrieval",
-			"set system services ssh protocol-version v1", 
-			"set system services ssh root-login allow" 
-	]
-	requiredCliList = [
-			"set system no-redirects", 
-			"set system no-ping-record-route", 
-			"set system no-ping-time-stamp", 
-			"set system internet-options tcp-drop-synfin-set", 
-			"set system internet-options no-source-quench", 
-			"set system internet-options icmpv4-rate-limit packet-rate 50", 
-			"set system internet-options icmpv6-rate-limit packet-rate 50", 
-			"set system internet-options no-ipv6-path-mtu-discovery", 
-			"set system internet-options no-ipip-path-mtu-discovery", 
-			"set system internet-options no-tcp-reset drop-all-tcp", 
-			"set system ports console log-out-on-disconnect", 
-			"set system ports console insecure", 
-			"set system ports auxiliary disable", 
-			"set system ports auxiliary insecure", 
-			"set system login retry-options tries-before-disconnect 3", 
-			"set system login retry-options backoff-threshold 1", 
-			"set system login retry-options backoff-factor 5", 
-			"set system login retry-options minimum-time 20", 
-			"set system login retry-options maximum-time 60", 
-			"set system login retry-options lockout-period 10", 
-			"set system login password minimum-length 15", 
-			"set system login password change-type character-sets", 
-			"set system login password minimum-changes 4", 
-			"set system login password minimum-numerics 2", 
-			"set system login password minimum-upper-cases 2", 
-			"set system login password minimum-lower-cases 2", 
-			"set system login password minimum-punctuations 2", 
-			"set system login password format sha512", 
-			"set system services ssh protocol-version v2", 
-			"set system services netconf ssh", 
-			"set system services ssh ciphers aes256-ctr", 
-			"set system services ssh ciphers aes256-cbc", 
-			"set system services ssh ciphers aes192-ctr", 
-			"set system services ssh ciphers aes192-cbc", 
-			"set system services ssh ciphers aes128-ctr", 
-			"set system services ssh ciphers aes128-cbc", 
-			"set system services ssh macs hmac-sha2-512", 
-			"set system services ssh macs hmac-sha2-256", 
-			"set system services ssh macs hmac-sha1", 
-			"set system services ssh macs hmac-sha1-96", 
-			"set system services ssh key-exchange ecdh-sha2-nistp521", 
-			"set system services ssh key-exchange ecdh-sha2-nistp384", 
-			"set system services ssh key-exchange ecdh-sha2-nistp256", 
-			"set system services ssh key-exchange group-exchange-sha2", 
-			"set system services ssh key-exchange dh-group14-sha1", 
-			"set system services ssh client-alive-count-max 3", 
-			"set system services ssh client-alive-interval 10", 
-			"set system services ssh connection-limit 10", 
-			"set system services ssh rate-limit 4", 
-			"set system services ssh max-sessions-per-connection 1", 
-			"set system services ssh root-login deny", 
-			"set system services ssh no-tcp-forwarding"
-	]
+	badCliList = []
+	requiredCliList = []
+	templateDir = config.get('global', 'templateDir')
+	unauthFile = "%s/%s" % (templateDir,"unauthorized-cli-commands.txt")
+	requiredFile = "%s/%s" % (templateDir,"required-cli-commands.txt")
+
+	# Check for required template files
+	if not os.path.isfile(unauthFile):
+		sys.stdout.write("\n\t+ Checking for Unauthorize cli commands file ........................")
+		print " FAILED!"
+		print "\nERROR: Does NOT exist: " + unauthFile
+		exit()
+	else:
+		# Read unauthorized clis into a list
+		with open(unauthFile, "r") as ucfile:
+			badCliList = [ucline.strip() for ucline in ucfile]
+		ucfile.close()
+
+		# Some sanity checking on read in data (empty, space, tab) 
+		badCliList = filter(None, badCliList)
+
+	if not os.path.isfile(requiredFile):
+		sys.stdout.write("\n\t+ Checking for Required cli commands file ........................")
+		print " FAILED!"
+		print "\nERROR: Does NOT exist: " + requiredFile
+		exit()
+	else:
+		# Read required clis into a list
+		with open(requiredFile, "r") as rcfile:
+			requiredCliList = [rcline.strip() for rcline in rcfile]
+		rcfile.close()
+
+		# Some sanity checking on read in data (empty, space, tab)
+		requiredCliList = filter(None, requiredCliList)
+
 	workDir = config.get('global', 'workDir')
 	workFile = "%s/%s" % (workDir,file)
+
 
 	# Read working file into a list
 	with open(workFile, "r") as file:
@@ -171,18 +145,18 @@ def checkCLIs(file,config):
 	# Remove working file
 	os.remove(workFile)
 
-	# Find unauthorized CLI commands
+		# Find unauthorized CLI commands
 	for cmd in badCliList:
-		if (cmd) in lines:
+		if cmd in lines:
 			sys.stdout.write(".")
-			lines = [line.replace(cmd, 
+			lines = [line.replace(cmd,
 				"<div class=\"redtip\">" + cmd + "<span class=\"redtiptext\">Check Result: FAILED</span></div>") for line in lines]
 			cmd = re.sub(r'set\s',"delete ", cmd)
 			fixCommands.append(cmd)
 
 	# Find required CLI commands
 	for cmd in requiredCliList:
-		if (cmd) in lines:
+		if cmd in lines:
 			sys.stdout.write(".")
 			lines = [line.replace(cmd, 
 				"<div class=\"greentip\">" + cmd + "<span class=\"greentiptext\">Check Result: Passed</span></div>") for line in lines]

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Purpose: Run predefined audit checks on Junos Configuration files that are in 'set' format.
-# Version: 0.10
+# Version: 0.11
 #####################################################################################################################
 
 ############################################
@@ -17,30 +17,26 @@ from checkModules import *
 ############################################
 ## Read in configuration file
 ############################################
-print "#################################################################################################"
+print "\n#################################################################################################"
 print "# J U N O S  A U D I T "
 print "#################################################################################################"
 sys.stdout.write("+ Reading configuration file......................")
 
+############################################
+## Read in junosAudit.ini configuration file
+############################################
 try:
 	with open('junosAudit.ini') as f:
 		junosAudit_config = f.read()
-
-	config = ConfigParser.RawConfigParser(allow_no_value=True)
-	config.readfp(io.BytesIO(junosAudit_config))
-
+		config = ConfigParser.RawConfigParser(allow_no_value=True)
+		config.readfp(io.BytesIO(junosAudit_config))
         print " SUCCESS"
-
 except IOError:
 	print " FAILED!"
 	print "\n\nERROR: Could not find configuration file: junosAudit.ini\n"
 	exit()
 
-############################################
-## Read in configuration file
-############################################
 # Check if necessary directories exist
-
 sys.stdout.write("+ Working Directory Exists........................")
 if os.path.exists(config.get('global', 'workDir')):
 	print " SUCCESS"
@@ -55,6 +51,14 @@ if os.path.exists(config.get('global', 'htmlDir')):
 else:
 	print " FAILED!"
 	print "\nERROR: HTML directory Does NOT exist: " + config.get('global', 'htmlDir')
+	exit()
+
+sys.stdout.write("+ Template Directory Exists.......................")
+if os.path.exists(config.get('global', 'templateDir')):
+	print " SUCCESS"
+else:
+	print " FAILED!"
+	print "\nERROR: Template directory Does NOT exist: " + config.get('global', 'templateDir')
 	exit()
 
 sys.stdout.write("+ Configuration Directory Exists..................")

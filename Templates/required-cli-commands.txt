@@ -1,0 +1,52 @@
+set system no-redirects 
+set system no-ping-record-route 
+set system no-ping-time-stamp 
+set system internet-options tcp-drop-synfin-set 
+set system internet-options no-source-quench 
+set system internet-options icmpv4-rate-limit packet-rate 50 
+set system internet-options icmpv6-rate-limit packet-rate 50 
+set system internet-options no-ipv6-path-mtu-discovery 
+set system internet-options no-ipip-path-mtu-discovery 
+set system internet-options no-tcp-reset drop-all-tcp 
+set system ports console log-out-on-disconnect 
+set system ports console insecure 
+set system ports auxiliary disable 
+set system ports auxiliary insecure 
+set system login retry-options tries-before-disconnect 3 
+set system login retry-options backoff-threshold 1 
+set system login retry-options backoff-factor 5 
+set system login retry-options minimum-time 20 
+set system login retry-options maximum-time 60 
+set system login retry-options lockout-period 10 
+set system login password minimum-length 15 
+set system login password change-type character-sets 
+set system login password minimum-changes 4 
+set system login password minimum-numerics 2 
+set system login password minimum-upper-cases 2 
+set system login password minimum-lower-cases 2 
+set system login password minimum-punctuations 2 
+set system login password format sha512 
+set system services ssh protocol-version v2 
+set system services netconf ssh 
+set system services ssh ciphers aes256-ctr 
+set system services ssh ciphers aes256-cbc 
+set system services ssh ciphers aes192-ctr 
+set system services ssh ciphers aes192-cbc 
+set system services ssh ciphers aes128-ctr 
+set system services ssh ciphers aes128-cbc 
+set system services ssh macs hmac-sha2-512 
+set system services ssh macs hmac-sha2-256 
+set system services ssh macs hmac-sha1 
+set system services ssh macs hmac-sha1-96 
+set system services ssh key-exchange ecdh-sha2-nistp521 
+set system services ssh key-exchange ecdh-sha2-nistp384 
+set system services ssh key-exchange ecdh-sha2-nistp256 
+set system services ssh key-exchange group-exchange-sha2 
+set system services ssh key-exchange dh-group14-sha1 
+set system services ssh client-alive-count-max 3 
+set system services ssh client-alive-interval 10 
+set system services ssh connection-limit 10 
+set system services ssh rate-limit 4 
+set system services ssh max-sessions-per-connection 1 
+set system services ssh root-login deny 
+set system services ssh no-tcp-forwarding

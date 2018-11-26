@@ -1,0 +1,4 @@
+set routing-options source-routing ip
+set routing-options source-routing ipv6
+set system services ssh protocol-version v1
+set system services ssh root-login allow 
