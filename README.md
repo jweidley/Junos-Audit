@@ -46,7 +46,8 @@ custom checks:
   - checkPartial: This function uses regular expressions so you can match keywords or partial CLI commands. Adding new checks is as 
     simple as adding a new 'elif' condition inside the for loop.
 
+For more complex checking you can add a new function in the checkModules.py file and then call it from junosAudit.py.
+
 # Application Specific Templates
 This version supports templates for SNMP, NTP and emergency accounts. These templates are located in the Templates directory and the contents of the files should be Junos CLI 'set' format. There are sample configurations in those files to assist you in proper modifications.
-For more complex checking you can add a new function in the checkModules.py file and then call it from junosAudit.py.
 
