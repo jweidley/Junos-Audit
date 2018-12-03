@@ -1,11 +1,10 @@
 # Junos-Audit
-Junos Audit is a Python script that will allow you to audit your Junos devices for security and organization baseline compliance. You have to customize the parts of the script to tell Junos Audit what to look for and then it will check the configurations, report corrective actions and generate a color coded HTML file for easy viewing.
+Junos Audit is a Python script that will your Junos devices for security and organizational baseline compliance. It will check the configurations, report corrective actions and generate a color coded HTML file for easy viewing.
 
 # Prerequisites
 1. Python. I test with Python 2.7
 2. Junos device configuration files (in 'set' format)
-3. Have some kind of idea what you want to look for in the configuration. There are some standard checks that are supplied for example
-   purposes but really its up to you to customize it for your useage.
+3. Default checks are based loosely on the Day One: Hardening Junos Devices book. (https://www.juniper.net/us/en/training/jnbooks/day-one/fundamentals-series/hardening-junos-devices-checklist/) 
 
 # Running Junos Audit
 1. download Junos Audit and put it in a directory
@@ -17,6 +16,7 @@ Junos Audit is a Python script that will allow you to audit your Junos devices f
    - Update the configDir path to reflect your environment
    - Update the htmlDir path to reflect your environment
    - Update the workDir path to reflect your environment
+   - Update the templateDir path to reflect your environment
 6. Populate the configuration directory with Junos device configuration files
    - Each file should contain the output of 2 Junos commands:
      + show version | no-more
@@ -29,11 +29,11 @@ Junos Audit is a Python script that will allow you to audit your Junos devices f
 8. Run the script
    - ./junosAudit.py
    - Watch the onscreen output to ensure the script proceeds successfully
-   - The HTML output files are placed in the htmlDir (as defined in the junosAudit.ini file.
+   - The HTML output files are placed in the htmlDir (as defined in the junosAudit.ini file).
 
 # Customizing the checks
-The check functions are located in the checkModles.py file. The function name gives you a clue as to its purpose. There are 2 general
-purpose functions for adding simple custom checks:
+The check functions are located in the checkModles.py file. The function name gives you a clue as to its purpose. There are 2 general purpose functions for adding simple 
+custom checks:
   - checkCLIs: Reads in the CLI commands from two files located in the Templates directory. Both files MUST contain the EXACT CLI commands. It is a simple 
     should be there or shouldn't be there kind of check. This function does *NOT* use regular expressions and thats why the CLI must match exactly.
  
@@ -46,5 +46,7 @@ purpose functions for adding simple custom checks:
   - checkPartial: This function uses regular expressions so you can match keywords or partial CLI commands. Adding new checks is as 
     simple as adding a new 'elif' condition inside the for loop.
 
+# Application Specific Templates
+This version supports templates for SNMP, NTP and emergency accounts. These templates are located in the Templates directory and the contents of the files should be Junos CLI 'set' format. There are sample configurations in those files to assist you in proper modifications.
 For more complex checking you can add a new function in the checkModules.py file and then call it from junosAudit.py.
 

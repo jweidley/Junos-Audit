@@ -1,0 +1,6 @@
+set system login class super-user-local idle-timeout 15
+set system login class super-user-local login-alarms
+set system login class super-user-local permissions all
+set system login user emergency full-name "Emergency login account if AAA servers are down"
+set system login user emergency class super-user-local
+set system login user emergency authentication encrypted-password "$5$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"

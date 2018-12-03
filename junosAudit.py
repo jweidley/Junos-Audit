@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Purpose: Run predefined audit checks on Junos Configuration files that are in 'set' format.
-# Version: 0.11
+# Version: 0.12
 #####################################################################################################################
 
 ############################################
@@ -112,6 +112,7 @@ def finalize(filenames,config):
 	sys.stdout.write("\n+ Finalizing Device Reports.......................")
 	workDir = config.get('global', 'workDir')
 	htmlDir = config.get('global', 'htmlDir')
+	
 	if config.has_option('site', 'customer'):
 		customerName = config.get('site', 'customer')
 	else:

@@ -1,0 +1,10 @@
+set system ntp boot-server 10.0.30.2
+set system ntp authentication-key 1 type md5
+set system ntp authentication-key 1 value "$9$6DTrCpBcyKxNbIENbs2GU/CtuIESreWX7"
+set system ntp authentication-key 2 type md5
+set system ntp authentication-key 2 value "$9$fQ390BEevLApvLxNY25QFnApO1RSlK"
+set system ntp server 10.0.31.2 key 2
+set system ntp server 10.0.30.2 key 1
+set system ntp server 10.0.30.2 prefer
+set system ntp trusted-key 1
+set system ntp trusted-key 2

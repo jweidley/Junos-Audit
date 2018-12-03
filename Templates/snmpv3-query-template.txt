@@ -1,0 +1,7 @@
+set snmp v3 usm local-engine user nms1 authentication-sha authentication-key "$9$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+set snmp v3 usm local-engine user nms1 privacy-des privacy-key "$9$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+set snmp v3 vacm security-to-group security-model usm security-name nms1 group all-oid-group
+set snmp v3 vacm access group all-oid-group default-context-prefix security-model usm security-level privacy read-view all-oid-view
+set snmp v3 vacm access group all-oid-group default-context-prefix security-model usm security-level privacy write-view all-oid-view
+set snmp engine-id use-mac-address
+set snmp view all-oid-view oid .1 include

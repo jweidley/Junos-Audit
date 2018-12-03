@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Purpose: This file contains all of the check functions that are called from the junosAudit.py script
-# Version: 0.9
+# Version: 0.10
 #####################################################################################################################################
 
 ############################################
@@ -9,6 +9,27 @@
 import os
 import re
 import sys
+
+######################################################################################################################################
+# deployTemplate Function
+# templateFile is passed in from another function which indicates the file that contains the Junos configuration to be added as a 
+# corrective actions list.
+######################################################################################################################################
+def deployTemplate(templateFile,fixCommands):
+	# Does templateFile exist?
+	if not os.path.isfile(templateFile):
+		print "\n\tERROR Template File does not exist: " + templateFile
+		exit()
+	else: 	
+		# Read working file into a list
+		with open(templateFile, "r") as file:
+			templateCommands = [line.strip() for line in file]
+		file.close()
+
+		# Merge fixCommands with template commands
+		fixCommands = fixCommands + templateCommands
+
+		return(fixCommands)
 
 ######################################################################################################################################
 # checkJunosVersion Function
@@ -268,8 +289,15 @@ def checkSNMP(file,config):
 	targetSecModel = ""
 	targetSecLevel = ""
 	targetMsgModel = ""
+	templateFile = ""
 	workDir = config.get('global', 'workDir')
 	workFile = "%s/%s" % (workDir,file)
+	
+	# Check if the snmpv3 template value is set in junosAudit.ini
+	if config.has_option('site', 'snmpv3Template'):
+		templateDir = config.get('global', 'templateDir')
+		templateName = config.get('site', 'snmpv3Template')
+		templateFile = "%s/%s" % (templateDir,templateName)
 	
 	# Read working file into memory
 	with open(workFile, "r") as file:
@@ -289,7 +317,7 @@ def checkSNMP(file,config):
 			community = re.split("\s", line)
 			file.write("<div class=\"redtip\">")
 			file.write(line)
-			file.write("<span class=\"redtiptext\">Check Status: FAILED!</span></div>")
+			file.write("<span class=\"redtiptext\">FAILED! Insecure: clear text.</span></div>")
 			file.write("\n")
 
 			if ("delete snmp community " + community[3]) not in fixCommands:
@@ -301,13 +329,13 @@ def checkSNMP(file,config):
 			trapLine = re.split("\s", line)
 			file.write("<div class=\"redtip\">")
 			file.write(line)
-			file.write("<span class=\"redtiptext\">Check Status: FAILED!</span></div>")
+			file.write("<span class=\"redtiptext\">FAILED! Insecure: clear text.</span></div>")
 			file.write("\n")
 
 			if ("delete snmp trap-group " + trapLine[3]) not in fixCommands:
 				fixCommands.append("delete snmp trap-group " + trapLine[3])
 
-		# Find SNMPv3 auth and priv values
+		# Find strong SNMPv3 auth and priv values
 		elif re.match(r'set\ssnmp\sv3\susm\slocal-engine\suser\s.*\s(authentication-sha|privacy-aes128)\s.*',line):
 			sys.stdout.write(".")
 			v3Auth = "1"
@@ -323,7 +351,7 @@ def checkSNMP(file,config):
 			auth = re.split("\s", line)
 			file.write("<div class=\"redtip\">")
 			file.write(line)
-			file.write("<span class=\"redtiptext\">Check Status: FAILED!</span></div>")
+			file.write("<span class=\"redtiptext\">FAILED! Weak auth algorithm.</span></div>")
 			file.write("\n")
 			fixCommands.append("set snmp v3 usm local-engine user " + auth[6] + " authentication-sha authentication-password -PASSWORD-")
 
@@ -334,7 +362,7 @@ def checkSNMP(file,config):
 			auth = re.split("\s", line)
 			file.write("<div class=\"redtip\">")
 			file.write(line)
-			file.write("<span class=\"redtiptext\">Check Status: FAILED!</span></div>")
+			file.write("<span class=\"redtiptext\">FAILED! Weak privacy algorithm.</span></div>")
 			fixCommands.append("set snmp v3 usm local-engine user " + auth[6] + " privacy-aes128 privacy-password -PASSWORD-")
 
 		# Find SNMPv3 vacm security
@@ -351,7 +379,7 @@ def checkSNMP(file,config):
 				v3VacmGroup = ""
 				file.write("<div class=\"redtip\">")
 				file.write(line)
-				file.write("<span class=\"redtiptext\">FAILED! Security model not usm</span></div>")
+				file.write("<span class=\"redtiptext\">FAILED! Security model not USM</span></div>")
 				file.write("\n")
 
 		# Find SNMPv3 vacm access
@@ -403,7 +431,7 @@ def checkSNMP(file,config):
 				targetSecLevel = ""
 				file.write("<div class=\"redtip\">")
 				file.write(line)
-				file.write("<span class=\"redtiptext\">FAILED! Security level not privacy</span></div>")
+				file.write("<span class=\"redtiptext\">FAILED! Sec level not privacy</span></div>")
 				file.write("\n")
 				fixCommands.append("set snmp v3 target-parameters " + targetSecModelLine[4] + " parameters security-level privacy")
 
@@ -431,7 +459,11 @@ def checkSNMP(file,config):
 
 	# Is SNMPv3 configured?
 	if not v3Auth or not v3VacmGroup or not v3VacmAccess:
-		fixCommands.append("# SNMPv3 NOT configured correctly. Deploy SNMPv3 template")
+		# If template file is not configured, print general statement.
+		if templateFile == "":
+			fixCommands.append("# SNMPv3 NOT configured correctly.")
+		else:
+			fixCommands = deployTemplate(templateFile,fixCommands)
 
 	# Add Corrective Actions
 	if (len(fixCommands) > 0):
@@ -468,7 +500,7 @@ def checkTraceoptions(file,config):
 		if re.match(r'.*\straceoptions\s.*',line):
 			file.write("<div class=\"redtip\">")
 			file.write(line)
-			file.write("<span class=\"redtiptext\">Check Status: FAILED!</span></div>")
+			file.write("<span class=\"redtiptext\">FAILED! Unneccessary debugging.</span></div>")
 			file.write("\n")
 
 			line = re.sub("set","delete", line)
@@ -497,8 +529,15 @@ def checkAccounts(file,config):
 	sys.stdout.write(".")
 	fixCommands = []
 	accountList = []
+	templateFile = ""
 	workDir = config.get('global', 'workDir')
 	workFile = "%s/%s" % (workDir,file)
+
+	# Check if the emergency account template value is set in junosAudit.ini
+	if config.has_option('site', 'emergencyAcctTemplate'):
+		templateDir = config.get('global', 'templateDir')
+		templateName = config.get('site', 'emergencyAcctTemplate')
+		templateFile = "%s/%s" % (templateDir,templateName)
 	
 	# Check existance of emergencyAcct, otherwise set it to something so it doesnt fail
 	if config.has_option('site', 'emergency'):
@@ -542,26 +581,26 @@ def checkAccounts(file,config):
 				file.write("\n")
 
 		# Find configured ssh keys
-		elif re.match(r'set\ssystem\slogin\suser\s.*\sauthentication ssh-.*',line):
-			sys.stdout.write(".")
-			sshLine = re.split('\s+',line)
-			file.write("<div class=\"redtip\">")
-			file.write(line)
-			file.write("<span class=\"redtiptext\">Status: FAILED! No ssh keys.</span></div>")
-			file.write("\n")
-
-			fixCommands.append("delete system login user " + classLine[4] + " authentication " + sshLine[6] + " " + sshLine[7])
+		#elif re.match(r'set\ssystem\slogin\suser\s.*\sauthentication ssh-.*',line):
+		#	sys.stdout.write(".")
+		#	sshLine = re.split('\s+',line)
+		#	file.write("<div class=\"redtip\">")
+		#	file.write(line)
+		#	file.write("<span class=\"redtiptext\">Status: FAILED! No ssh keys.</span></div>")
+		#	file.write("\n")
+                #
+		#	fixCommands.append("delete system login user " + classLine[4] + " authentication " + sshLine[6] + " " + sshLine[7])
 
 		else:
 			file.write(line)
 			file.write("\n")
 
-	# Check to see if the emergency account is configured
-	if emergencyAcct:
-		sys.stdout.write(".")
-		if emergencyAcct not in accountList:
-			fixCommands.append("# Emergency Account NOT configured. Deploy account template.")
-			
+	# If template file is defined, deploy the template
+	if templateFile is None:
+		fixCommands.append("# Emergency account NOT configured")
+	elif templateFile:
+		fixCommands = deployTemplate(templateFile,fixCommands)
+		
 	# Add Corrective Actions
 	if (len(fixCommands) > 0):
 		file.write("<font color=red>")
@@ -569,7 +608,6 @@ def checkAccounts(file,config):
 			file.write(i + "\n")
 		file.write("</font>\n")
 	file.close()
-
 
 ######################################################################################################################################
 # checkNTP Function
@@ -593,15 +631,21 @@ def checkNTP(file,config):
 		exit()
 
 	else:
-		
 		sys.stdout.write(".")
 		fixCommands = []
 		ntpConfigured = ""
 		ntpAuthKeyList = []
+		templateFile = ""
 		workDir = config.get('global', 'workDir')
 		workFile = "%s/%s" % (workDir,file)
 		ntpSvrList = config.get('site', 'ntp_servers')
 	
+		# Check if the ntp template value is set in junosAudit.ini
+		if config.has_option('site', 'ntpTemplate'):
+			templateDir = config.get('global', 'templateDir')
+			templateName = config.get('site', 'ntpTemplate')
+			templateFile = "%s/%s" % (templateDir,templateName)
+
 		# Read working file into memory
 		with open(workFile, "r") as file:
 			lines = [line.strip() for line in file]
@@ -721,8 +765,11 @@ def checkNTP(file,config):
 
 		# Is NTP configured?
 		if not ntpConfigured:
-			fixCommands.append("# NTP not configured. Deploy NTP template")
-
+			if templateFile == "":
+				fixCommands.append("# NTP not configured.")
+			else:
+				fixCommands = deployTemplate(templateFile,fixCommands)
+				
 		# Add Corrective Actions
 		if (len(fixCommands) > 0):
 			file.write("<font color=red>")
