@@ -7,7 +7,14 @@
 #################################
 # Variables
 #################################
+# configDir is where the output will be written
 configDir = "./Configs"
+
+# Devices is a list of IP addresses of the devices to grab configs from.
+devices = [
+	'192.168.3.1',
+	'192.168.3.101'
+	]
 
 #################################
 # Modules
@@ -29,11 +36,7 @@ print "Enter Credentials for all devices"
 username = raw_input("Username: ")
 passwd = getpass()
 
-devices = [
-	'192.168.3.1',
-	'192.168.3.101'
-	]
-
+# Loop through devices and gather information
 for device in devices:
 
 	# Open file for writing
