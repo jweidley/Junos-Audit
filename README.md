@@ -17,7 +17,8 @@ Junos Audit is a Python script that will your Junos devices for security and org
    - Update the htmlDir path to reflect your environment
    - Update the workDir path to reflect your environment
    - Update the templateDir path to reflect your environment
-6. Populate the configuration directory with Junos device configuration files
+6. Populate the configuration directory with Junos device configuration files. You can use the junosAudit-retrieve.py
+   script or follow the instructions below:
    - Each file should contain the output of 2 Junos commands:
      + show version | no-more
      + show configuration | display set | no-more
